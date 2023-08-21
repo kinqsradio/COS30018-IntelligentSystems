@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -170,7 +173,6 @@ def ohlc2cs(fname, seq_len, dataset_type, dimension):
                 ax2 = ax1.twinx()
                 # Plot the volume overlay
                 mpf.plot(c, type="candle", style="yahoo", volume=True, show_nontrading=True)
-                ax2.add_collection(c)
                 ax2.grid(False)
                 ax2.set_xticklabels([])
                 ax2.set_yticklabels([])

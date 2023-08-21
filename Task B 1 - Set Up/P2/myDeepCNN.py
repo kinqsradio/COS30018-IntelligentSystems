@@ -14,12 +14,17 @@ import tensorflow.keras as keras
 from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, Flatten, Activation, add
 from tensorflow.keras.layers import Dropout, Flatten
 from tensorflow.keras.layers import BatchNormalization
-from tensorflow.keras.models import Model, Sequential
-from keras import initializers
-from tensorflow.keras.layers import Layer, InputSpec
+# from tensorflow.keras.models import Model, Sequential
+# from keras import initializers
+# from tensorflow.keras.layers import Layer, InputSpec
 from keras import backend as K
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from keras.optimizers import SGD
+from keras.utils import to_categorical
 
-from tensorflow.keras.optimizers import *
+
+from tensorflow.keras.optimizers import Adam
 import numpy as np
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
@@ -29,7 +34,6 @@ import argparse
 import time
 from datetime import timedelta
 
-
 def build_dataset(data_directory, img_width):
     X, y, tags = dataset.dataset(data_directory, int(img_width))
     nb_classes = len(tags)
@@ -38,57 +42,54 @@ def build_dataset(data_directory, img_width):
     train_size = sample_count
     print("train size : {}".format(train_size))
     feature = X
-    label = keras.utils.to_categorical(y, nb_classes)
+    label = to_categorical(y, nb_classes)
     return feature, label, nb_classes
 
 
 def build_model(SHAPE, nb_classes, bn_axis, seed=None):
+    """
+    Build the model
+    Args:
+      - SHAPE: input image shape
+      - nb_classes: number of classes
+    Returns:
+      - model: built model
+    """
     if seed:
         np.random.seed(seed)
 
-    input_layer = Input(shape=SHAPE)
+    model = Sequential()
 
-    # Step 1
-    x = Conv2D(32, 3, 3, init='glorot_uniform',
-               border_mode='same', activation='relu')(input_layer)
-    # Step 2 - Pooling
-    x = MaxPooling2D(pool_size=(2, 2))(x)
+    # 1st Convolution Layer
+    model.add(Conv2D(32, (3, 3), padding='valid', input_shape=SHAPE))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    # Step 1
-    x = Conv2D(48, 3, 3, init='glorot_uniform', border_mode='same',
-               activation='relu')(x)
-    # Step 2 - Pooling
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.25)(x)
+    # 2nd Convolution Layer
+    model.add(Conv2D(64, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    # Step 1
-    x = Conv2D(64, 3, 3, init='glorot_uniform', border_mode='same',
-               activation='relu')(x)
-    # Step 2 - Pooling
-    x = MaxPooling2D(pool_size=(2, 2))(x)
+    # 3rd Convolution Layer
+    model.add(Conv2D(128, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
-    # Step 1
-    x = Conv2D(96, 3, 3, init='glorot_uniform', border_mode='same',
-               activation='relu')(x)
-    # Step 2 - Pooling
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.25)(x)
+    # 1st FC Layer
+    model.add(Flatten())
+    model.add(Dense(128))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
 
-    # Step 3 - Flattening
-    x = Flatten()(x)
+    # 2nd FC Layer
+    model.add(Dense(nb_classes))
+    model.add(Activation('softmax'))
 
-    # Step 4 - Full connection
-
-    x = Dense(output_dim=256, activation='relu')(x)
-    # Dropout
-    x = Dropout(0.5)(x)
-
-    x = Dense(output_dim=2, activation='softmax')(x)
-
-    model = Model(input_layer, x)
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=Adam(),
+                  metrics=['accuracy'])
 
     return model
-
 
 def main():
     start_time = time.monotonic()
@@ -127,8 +128,8 @@ def main():
     print("number of classes : {}".format(nb_classes))
 
     model = build_model(SHAPE, nb_classes, bn_axis)
-
-    model.compile(optimizer=Adam(lr=1.0e-4),
+    # 1.0e-4
+    model.compile(optimizer=Adam(learning_rate=0.001),
                   loss='categorical_crossentropy', metrics=['accuracy'])
 
     # Fit the model
@@ -144,9 +145,16 @@ def main():
     cm = confusion_matrix(Y_test, y_pred)
     report = classification_report(Y_test, y_pred)
     tn = cm[0][0]
-    fn = cm[1][0]
-    tp = cm[1][1]
-    fp = cm[0][1]
+    if cm.shape[0] > 1:
+        fn = cm[1][0]
+        tp = cm[1][1]
+        fp = cm[0][1]
+    else:
+        # Handle the case where the confusion matrix has only one row.
+        # This might mean that one of the classes wasn't predicted at all.
+        fn = 0
+        tp = 0
+        fp = 0
     if tp == 0:
         tp = 1
     if tn == 0:

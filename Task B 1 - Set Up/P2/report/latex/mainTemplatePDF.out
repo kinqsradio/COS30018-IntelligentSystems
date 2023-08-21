@@ -1,0 +1,20 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Related Work}{}% 2
+\BOOKMARK [1][-]{section.3}{Dataset}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Data Collection}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Data Preprocessing}{section.3}% 5
+\BOOKMARK [1][-]{section.4}{Methodology}{}% 6
+\BOOKMARK [2][-]{subsection.4.1}{Candlestick Chart}{section.4}% 7
+\BOOKMARK [2][-]{subsection.4.2}{Learning Algorithm}{section.4}% 8
+\BOOKMARK [3][-]{subsubsection.4.2.1}{Convolutional Neural Network}{subsection.4.2}% 9
+\BOOKMARK [3][-]{subsubsection.4.2.2}{Residual Network}{subsection.4.2}% 10
+\BOOKMARK [3][-]{subsubsection.4.2.3}{VGG Network}{subsection.4.2}% 11
+\BOOKMARK [3][-]{subsubsection.4.2.4}{Random Forest}{subsection.4.2}% 12
+\BOOKMARK [3][-]{subsubsection.4.2.5}{K-Nearest Neighbors}{subsection.4.2}% 13
+\BOOKMARK [2][-]{subsection.4.3}{Performance Evaluation}{section.4}% 14
+\BOOKMARK [1][-]{section.5}{Experimental Results and Discussion}{}% 15
+\BOOKMARK [2][-]{subsection.5.1}{Classification for Taiwan 50 Dataset}{section.5}% 16
+\BOOKMARK [2][-]{subsection.5.2}{Classification for Indonesia 10 Dataset}{section.5}% 17
+\BOOKMARK [2][-]{subsection.5.3}{Independent Testing Result}{section.5}% 18
+\BOOKMARK [2][-]{subsection.5.4}{Comparison}{section.5}% 19
+\BOOKMARK [1][-]{section.6}{Conclusions and Future Works}{}% 20
