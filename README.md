@@ -5,4 +5,5 @@
     <li><a href="Tasks B.3 - Data Processing 2">Tasks B.3 - Data Processing 2</a></li>
     <li><a href="Tasks B.4 - Machine Learning 1">Tasks B.4 - Machine Learning 1</a></li>
     <li><a href="Tasks B.5 - Machine Learning 2">Tasks B.5 - Machine Learning 2</a></li>
+    <li><a href="Tasks B.6 - Machine Learning 3">Tasks B.6 - Machine Learning 3</a></li>
 </ul>
