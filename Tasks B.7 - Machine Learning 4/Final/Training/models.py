@@ -61,12 +61,12 @@ def create_dynamic_model(input_shape, layer_configs, output_units=1):
 
     return model
 
-def intialized_lstm(input_shape, layer_configs):
-    model = create_dynamic_model(input_shape, layer_configs)
-    model.compile(loss='mse', optimizer='adam', metrics=["accuracy"])
+def intialized_lstm(input_shape, layer_configs, n_steps):
+    model = create_dynamic_model(input_shape, layer_configs, output_units=n_steps)
+    model.compile(loss='mse', optimizer='adam', metrics=["mae"])  
     model.summary()
-    
     return model
+
 
 
 def intialize_bert_model(path='bert-base-uncased', num_labels=3):

@@ -131,7 +131,7 @@ def scaler_features(input_data, scale=True):
         return input_data, None
 
 # Create Train Datasets
-def create_datasets(start_date, end_date, tick, step_size=30, split_ratio=0.8):
+def create_datasets(start_date, end_date, tick, step_size=30, n_steps=5, split_ratio=0.8, multisteps=False):
     
     # Download or Load Raw Data
     data = load_data(start_date, end_date, tick)
@@ -184,9 +184,14 @@ def create_datasets(start_date, end_date, tick, step_size=30, split_ratio=0.8):
         scaled_target_train, train_target_scaler = scaler_features(train_data[target_column].values.reshape(-1, 1))
 
         x_train, y_train = [], []
-        for i in range(step_size, len(scaled_data_train)):
-            x_train.append(scaled_data_train[i-step_size:i])
-            y_train.append(scaled_target_train[i])
+        if multisteps:
+            for i in range(step_size, len(scaled_data_train) - n_steps + 1):
+                x_train.append(scaled_data_train[i-step_size:i])
+                y_train.append(scaled_target_train[i:i+n_steps])
+        else:
+            for i in range(step_size, len(scaled_data_train)):
+                x_train.append(scaled_data_train[i-step_size:i])
+                y_train.append(scaled_target_train[i])
 
         x_train, y_train = np.array(x_train), np.array(y_train)
         print(f"x_train shape: {x_train.shape}")
@@ -200,9 +205,14 @@ def create_datasets(start_date, end_date, tick, step_size=30, split_ratio=0.8):
         scaled_target_test = train_target_scaler.transform(test_data[target_column].values.reshape(-1, 1))
 
         x_test, y_test = [], []
-        for i in range(step_size, len(scaled_data_test)):
-            x_test.append(scaled_data_test[i-step_size:i])
-            y_test.append(scaled_target_test[i])
+        if multisteps:
+            for i in range(step_size, len(scaled_data_test) - n_steps + 1):
+                x_test.append(scaled_data_test[i-step_size:i])
+                y_test.append(scaled_target_test[i:i+n_steps])
+        else:
+            for i in range(step_size, len(scaled_data_test)):
+                x_test.append(scaled_data_test[i-step_size:i])
+                y_test.append(scaled_target_test[i])
 
         x_test, y_test = np.array(x_test), np.array(y_test)
         print(f"x_test shape: {x_test.shape}")
@@ -219,7 +229,6 @@ def create_datasets(start_date, end_date, tick, step_size=30, split_ratio=0.8):
 
         # Save x_train, y_train, x_test, y_test
         np.savez(TRAIN_ARRAY_FILE, x_train=x_train, y_train=y_train)
-
         np.savez(TEST_ARRAY_FILE, x_test=x_test, y_test=y_test)
 
     # For data

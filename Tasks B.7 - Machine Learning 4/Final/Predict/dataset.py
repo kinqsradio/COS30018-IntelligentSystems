@@ -129,7 +129,7 @@ def scaler_features(input_data, scale=True):
         return input_data, None
     
 # Create Predict Datasets
-def create_predict_datasets(start_predict, end_predict, tick, k, step_size=30):
+def create_predict_datasets(start_predict, end_predict, tick, step_size=30, n_steps=5, multisteps=False):
     
     # Download or Load Raw Data
     print(f"Fetching data from {start_predict} to {end_predict}")
@@ -157,9 +157,14 @@ def create_predict_datasets(start_predict, end_predict, tick, k, step_size=30):
     scaled_target_train, scaler = scaler_features(df[target_column].values.reshape(-1, 1))
 
     x_test, y_test = [], []
-    for i in range(step_size, len(scaled_data)):
-        x_test.append(scaled_data[i-step_size:i])
-        y_test.append(scaled_target_train[i])
+    if multisteps:
+        for i in range(step_size, len(scaled_data) - n_steps + 1):
+            x_test.append(scaled_data[i-step_size:i])
+            y_test.append(scaled_target_train[i:i+n_steps])
+    else:
+        for i in range(step_size, len(scaled_data)):
+            x_test.append(scaled_data[i-step_size:i])
+            y_test.append(scaled_target_train[i])
 
     x_test, y_test = np.array(x_test), np.array(y_test)
     print("x_test shape:", x_test.shape)

@@ -46,21 +46,23 @@ def predictions(lstm_model,
                 tick, 
                 start_predict, 
                 end_predict, 
-                k=10, 
+                k=5, 
                 step_size=30,
                 start_p=0, 
                 max_p=5, 
                 start_q=0, 
                 max_q=5, 
                 m=7, 
-                seasonal=True):
+                seasonal=True,
+                multisteps=False):
 
     # Processing data
     predict_df, scaled_data, scaler, x_test, y_test = create_predict_datasets(start_predict, 
                                                                               end_predict, 
-                                                                              tick,
-                                                                              k, 
-                                                                              step_size)
+                                                                              tick, 
+                                                                              step_size,
+                                                                              n_steps=k,
+                                                                              multisteps=multisteps)
     
     # Actual Prices
     actual_prices = predict_df['Close'].values
@@ -92,7 +94,6 @@ def predictions(lstm_model,
                                 random_state=20, 
                                 n_fits=50)
     
-    
     # Arima Predictions with confidence intervals
     arima_predictions, arima_conf_int = arima_model.predict(n_periods=k, return_conf_int=True)
     arima_upper_bound = arima_conf_int[:, 1]
@@ -108,28 +109,27 @@ def predictions(lstm_model,
     
     # Finbert analysing 
     results = finbert_nlp(text)
-    results
+    for result in results:
+        print(result)
 
     sentiment = get_sentitment(results)
     print(f"Suggestion: {sentiment}")
     
     # Future forecast
-    future_days = k
-    future_predictions = []
-    
     input_data = x_test[-1]
+    lstm_future_predictions = lstm_model.predict(input_data.reshape(1, -1, x_test.shape[-1]))
+    
+    # Inversely scaling
+    lstm_future_predictions = scaler.inverse_transform(lstm_future_predictions)
 
     # Getting the last known date from the dataset and generating future dates
     last_known_date = datetime.strptime(end_predict, '%Y-%m-%d')
-    future_dates = [last_known_date + timedelta(days=i) for i in range(1, future_days + 1)]
+    future_dates = [last_known_date + timedelta(days=i) for i in range(1, k + 1)]
 
-    for i in range(future_days):
-        lstm_prediction = lstm_model.predict(input_data.reshape(1, -1, x_test.shape[-1]))
-    
-        # Inversely scaling
-        lstm_predicted_price = scaler.inverse_transform(lstm_prediction)
-        future_predictions.append(lstm_predicted_price)
-        
+    for i in range(k):
+        # LSTM prediction for the day
+        lstm_predicted_price = lstm_future_predictions[0, i]
+
         # ARIMA prediction and confidence interval for the day
         arima_predicted_price = arima_predictions[i]
         arima_upper = arima_upper_bound[i]
@@ -138,16 +138,11 @@ def predictions(lstm_model,
         # Print predictions
         current_date = future_dates[i]
         print(f"Date: {current_date.strftime('%Y-%m-%d')}")
-        print(f"LSTM Predicted Price: {lstm_predicted_price[0][0]:.2f}")
+        print(f"LSTM Predicted Price: {lstm_predicted_price:.2f}")
         print(f"ARIMA Predicted Price: {arima_predicted_price:.2f} (Upper: {arima_upper:.2f}, Lower: {arima_lower:.2f})")        
-        # Updating the last element with the new prediction
-        input_data = np.roll(input_data, -1, axis=0)
-        input_data[-1] = lstm_prediction
-
-    # Convert to numpy
-    future_predictions = np.array(future_predictions)
-    avg_predictions = average_predictions(future_predictions, arima_predictions)
-    return predict_df, actual_prices, sentiment, lstm_past_predictions, avg_predictions, future_predictions, arima_predictions, arima_conf_int
+    
+    avg_predictions = average_predictions(lstm_future_predictions[0], arima_predictions)
+    return predict_df, actual_prices, sentiment, lstm_past_predictions, avg_predictions, lstm_future_predictions[0], arima_predictions, arima_conf_int
 
 
 def average_predictions(lstm_predictions, arima_predictions):
@@ -173,5 +168,3 @@ def average_predictions(lstm_predictions, arima_predictions):
     print("NaN in ARIMA predictions:", np.isnan(arima_predictions).any())
 
     return avg_predictions
-
-

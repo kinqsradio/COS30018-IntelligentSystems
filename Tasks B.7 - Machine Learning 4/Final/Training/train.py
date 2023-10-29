@@ -11,11 +11,10 @@ def train_lstm(model, x_train, y_train, batch_size, epochs):
     save_path = 'model/'
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    model_save_path = os.path.join(save_path, 'best_model.pt')
+    model_save_path = os.path.join(save_path, 'best_model.h5')
     csv_log_file = os.path.join(save_path, 'training_log.csv')
     
     checkpoint = ModelCheckpoint(model_save_path, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
-    checkpoint_acc = ModelCheckpoint(os.path.join(save_path, 'best_model_acc.h5'), monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
     tensorboard = TensorBoard(log_dir=os.path.join(save_path, 'logs'), histogram_freq=1, write_graph=True, write_images=True)
     csv_logger = CSVLogger(csv_log_file, append=True)
     
@@ -38,8 +37,7 @@ def train_lstm(model, x_train, y_train, batch_size, epochs):
         return lr
 
     lr_scheduler = LearningRateScheduler(lr_schedule)
-    callbacks_list = [checkpoint, checkpoint_acc, tensorboard, csv_logger, reduce_lr, early_stopping, lr_scheduler]
-
+    callbacks_list = [checkpoint, tensorboard, csv_logger, reduce_lr, early_stopping, lr_scheduler]
 
     # Training Execution
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, shuffle=True, validation_split=0.2, callbacks=callbacks_list)
